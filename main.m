@@ -38,10 +38,10 @@ listNum = size(list, 1) - 2;
 fps = input('Please input the sampling rate of the exp.:\n');
 tifNum = (0-(-0.5))*2*2/0.1*fps;
 tifSeq = zeros((tifNum*listNum), 3); % A cell has cells
-ang1stSlide; % input the real data from the exp.
+load ang1stSlide; % input the real data from the exp.
 %%
 q = 1;
-frame = cell(tifNum,1);
+frame = zeros(480, 640);
 
 for j = 3:size(list, 1)
     fprintf('Now, process the Folder %d.\n', j-2);
@@ -50,19 +50,44 @@ for j = 3:size(list, 1)
     tifList = dir(fullfile(maindir, list(j).name, '*.tiff'));
     fileNum = length(tifList);
     
-    if fileNum > 0
-        for ii = 1:tifNum
-            for jj = startNum:(startNum + tifNum) % fps = 106
-                frame{ii}= imread(fullfile(maindir, list(j).name, tifList(jj).name));
-                % 3. Read .tiff files;
-                tifSeq(q, 3) = mean(frame{ii}(:)); % 4. Mean each frame;
-                q = q + 1;
-            end
-        end
-        clear frame
-    else
+    if fileNum <= 0
         disp('Folder %d is empty', j-2);
+        break
     end
+    
+    for jj = startNum:(startNum + tifNum-1) % fps = 106
+        frame = imread(fullfile(maindir, list(j).name, tifList(jj).name));
+        % 3. Read .tiff files;
+        tifSeq(q, 3) = mean(frame(:)); % 4. Mean each frame;
+        q = q + 1;
+        clear frame
+    end
+    
+    
     fprintf('Folder %d has been processed.\n', j-2);
 end
 %% 5. plot the [average(Intensity), angle, frames];
+for jj =1:listNum
+    tifSeq((1+(jj-1)*tifNum) : (tifNum*jj), 1) = ang1stSlide(jj,1);
+end
+
+Voltage1 = 0;
+Voltage2 = -0.5;
+VoltDots = (linspace(Voltage1,Voltage2,tifNum/4))'; % linspace is row vector
+Volt = [VoltDots; flipud(-1*VoltDots(1:end))]; % 1c, that is [0 -0.5 0].
+[r, c] = size(Volt);
+Voltage = zeros(40*r,c);
+Voltage(1:tifNum/2) = Volt;
+for jj = 1:listNum*2-1 % there are 20 folders in total, and each has 2 circuits.
+    Voltage(1+jj*tifNum/2:(jj+1)*tifNum/2) = [VoltDots; flipud(-1*VoltDots(1:end))];
+end
+tifSeq(:,2) = Voltage;
+
+x = tifSeq(:,1);
+y = tifSeq(:,2);
+z = tifSeq(:,3);
+plot3(x,y,z)
+xlabel('Angle')
+ylabel('Voltages')
+zlabel('Intensity')
+grid on
