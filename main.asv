@@ -38,8 +38,8 @@ listNum = size(list, 1) - 2;
 fps = input('Please input the sampling rate of the exp.:\n');
 tifNum = (0-(-0.5))*2*2/0.1*fps;
 tifSeq = zeros((tifNum*listNum), 3); % A cell has cells
-ang1stSlide; % input the real data from the exp.
-%%
+ang1stSlide; %
+%% 
 q = 1;
 frame = cell(tifNum,1);
 
@@ -49,20 +49,18 @@ for j = 3:size(list, 1)
     startNum = ang1stSlide(j-2,2);
     tifList = dir(fullfile(maindir, list(j).name, '*.tiff'));
     fileNum = length(tifList);
-    
     if fileNum > 0
         for ii = 1:tifNum
             for jj = startNum:(startNum + tifNum) % fps = 106
-                frame{ii}= imread(fullfile(maindir, list(j).name, tifList(jj).name));
+                frame(ii)= imread(fullfile(maindir, list(j).name, tifList(jj).name));
                 % 3. Read .tiff files;
-                tifSeq(q, 3) = mean(frame{ii}(:)); % 4. Mean each frame;
-                q = q + 1;
             end
+            tifSeq(q, 3) = mean(frame(:)); % 4. Mean each frame;
+            q = q + 1;
         end
         clear frame
     else
-        disp('Folder %d is empty', j-2);
+        disp('Folder %d is empty', j);
     end
-    fprintf('Folder %d has been processed.\n', j-2);
 end
 %% 5. plot the [average(Intensity), angle, frames];
