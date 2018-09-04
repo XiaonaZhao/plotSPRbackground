@@ -1,3 +1,4 @@
+%%
 clear
 clc
 
@@ -5,7 +6,6 @@ clc
 % Created: 9th July, 2018;
 % The exp. is CV with 0 ~ -0.5V, 0.1 V/s, 2 circuits.
 
-%%
 % ang1stSlide = [...
 %     5587 326;...
 %     5589 221;...
@@ -28,7 +28,6 @@ clc
 %     5656 452;...
 %     5661 403]; % 1st column is the angle of laser, the other the begin slide
 
-
 %% 1. Approach the file address;
 maindir = uigetdir( 'Select the destination folder' );
 list = dir(fullfile(maindir));
@@ -39,7 +38,8 @@ fps = input('Please input the sampling rate of the exp.:\n');
 tifNum = (0-(-0.5))*2*2/0.1*fps;
 tifSeq = zeros((tifNum*listNum), 3); % A cell has cells
 load ang1stSlide; % input the real data from the exp.
-%%
+
+%% 3. Calculate the average of each frames in every folder one by one
 q = 1;
 frame = zeros(480, 640);
 
@@ -63,14 +63,17 @@ for j = 3:size(list, 1)
         clear frame
     end
     
-    
     fprintf('Folder %d has been processed.\n', j-2);
 end
-%% 5. plot the [average(Intensity), angle, frames];
+
+%% 4. plot the [average(Intensity), angle, frames];
+
 for jj =1:listNum
     tifSeq((1+(jj-1)*tifNum) : (tifNum*jj), 1) = ang1stSlide(jj,1);
 end
 
+
+%% 5. plot the [angle, Voltage, average(Intensity)];
 Voltage1 = 0;
 Voltage2 = -0.5;
 VoltDots = (linspace(Voltage1,Voltage2,tifNum/4))'; % linspace is row vector
@@ -87,7 +90,31 @@ x = tifSeq(:,1);
 y = tifSeq(:,2);
 z = tifSeq(:,3);
 plot3(x,y,z)
+grid on
 xlabel('Angle')
 ylabel('Voltages')
 zlabel('Intensity')
-grid on
+
+%% 6. plot the [angle, frames, average(Intensity)];
+frames = (linspace(1,tifNum,tifNum))';
+Frames = zeros(tifNum*20,1);
+Frames(1:tifNum) = frames;
+for jj = 1:listNum-1 % there are 20 folders in total, and each has 2 circuits.
+    Frames(1+jj*tifNum:(jj+1)*tifNum) = frames;
+end
+tifSeq(:,2) = Frames;
+
+x = tifSeq(:,1);
+y = tifSeq(:,2);
+z = tifSeq(:,3);
+scatter3(x, y, z, 10, z, 'fill');
+caxis([0 1e+04]);
+% colormap(jet(1e+6));
+% map = colormap;
+% map(1,:) = [1 1 1];
+colormap default
+colorbar;
+title('How the laser location and samping time in CV affect the intensity');
+xlabel('Angle')
+ylabel('Frames')
+zlabel('Intensity')
